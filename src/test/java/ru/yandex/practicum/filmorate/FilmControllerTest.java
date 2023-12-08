@@ -16,7 +16,7 @@ public class FilmControllerTest {
 
     @BeforeEach
     public void beforeEach(){
-        filmController = new FilmController();
+       // filmController = new FilmController();
         film = new Film();
         film.setName("Harry Potter");
         film.setDescription("American romantic comedy film directed by Blake Edwards, written by George Axelrod," +

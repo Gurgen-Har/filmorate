@@ -17,7 +17,7 @@ public class UserControllerTest {
     @BeforeEach
     public void beforeEach(){
         user = new User();
-        userController = new UserController();
+        //userController = new UserController();
         user.setName("MyName");
         user.setEmail("My@mayl.ru");
         user.setLogin("MyPower");

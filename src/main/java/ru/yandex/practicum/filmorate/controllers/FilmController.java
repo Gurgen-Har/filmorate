@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.controllers;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,69 +17,57 @@ import java.util.Map;
 
 @RestController
 @Slf4j
+@RequestMapping("/films")
 public class FilmController {
-    private Map<Integer, Film> films;
-    private int currentId;
-    public FilmController(){
-        films = new HashMap<>();
-        currentId = 0;
+
+    private final FilmService filmService;
+    private final FilmStorage filmStorage;
+    @Autowired
+    public FilmController(FilmStorage filmStorage, FilmService filmService){
+        this.filmService = filmService;
+        this.filmStorage = filmStorage;
     }
     //получение фильмов
-    @GetMapping("/films")
+    @GetMapping
     public List<Film> getFilms() {
-        return new ArrayList<>(films.values());
+        return filmStorage.getFilms();
+    }
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable Long id){
+        return filmStorage.getFilmById(id);
     }
 
-    @PostMapping(value = "/films")
-    public Object createFilm(@RequestBody Film film){
-        try{
-            log.info("Получен POST запрос к эндпоинту: '/films' на добавление фильма с ID = {}",currentId + 1);
-            if (isValid(film)) {
-                film.setId(++currentId);
-                films.put(film.getId(), film);
-            }
-        }catch (ValidationException exp){
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        } catch (NullPointerException npe){
-            log.error("Передан пустой аргумент!");
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        }
-        return film;
-    }
-    @PutMapping(value = "/films")
-    public Object updateFilm(@RequestBody Film film){
-        try{
-            log.info("Получен PUT - запрос на изменение данных по ID = {}", film.getId());
+    @GetMapping("/popular")
+    public List<Film> getTopFilms(){
+        return filmService.showTopFilms();
 
-            if (film.getId() == null) {
-                film.setId(currentId + 1);
-            }
-            if (isValid(film)) {
-                films.put(film.getId(), film);
-                currentId++;
-            }
-        }catch (ValidationException exp){
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        }catch (NullPointerException exp){
-            log.error("Передан пустой аргумент");
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        }
+    }
+
+
+    @PostMapping
+    public Film createFilm(@RequestBody Film film){
+        log.info("Получен PUT запрос на создание");
+        filmStorage.addFilm(film);
         return film;
     }
-    boolean isValid(Film film){
-        if (film.getName().isEmpty()){
-            throw new ValidationException("Название фильма не должно быть пустым");
-        }
-        if (film.getDescription().length() > 200){
-            throw new ValidationException("Описание фильма не должно привышать 200 символов ");
-        }
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895,12,28))){
-            throw new ValidationException("Дата релиза не может быть раньше чем 28.12.1895");
-        }
-        if (film.getDuration() <= 0){
-            throw new ValidationException("Продолжительность фильма должна быть положительной");
-        }
-        return true;
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable Long id, @PathVariable Long userId ){
+        log.info("Получен PUT запрос на лайк");
+        filmService.addLike(userId,id);
+    }
+
+    @PutMapping
+    public Film updateFilm(@RequestBody Film film){
+        log.info("Получен PUT запрос на апдейт фильма:");
+        filmStorage.updateFilm(film);
+        return film;
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable Long id, @PathVariable Long userId){
+        log.info("Запрос на удаление лайка");
+        filmService.deleteLike(userId,id);
     }
 
 

@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.controllers;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,70 +17,56 @@ import java.util.Map;
 
 @RestController
 @Slf4j
+@RequestMapping("/users")
 public class UserController {
-    private Map<Integer,User> users;
-    private  int currentId;
+    private final UserStorage userStorage;
+    private final UserService userService;
 
-    public UserController(){
-        users = new HashMap<>();
-        currentId = 0;
-
+    @Autowired
+    public UserController(UserService userService, UserStorage userStorage){
+        this.userService = userService;
+        this.userStorage = userStorage;
     }
-    @GetMapping("/users")
+    @GetMapping
     public List<User> getUsers(){
-        return new ArrayList<>(users.values());
+        return userStorage.getUsers();
     }
 
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable Long id){
+        return userService.getFriends(id);
+    }
 
-    @PostMapping(value = "/users")
-    public Object createUser(@RequestBody User user){
-        try{
-            log.info("Поступил POST-запрос о создании пользователя с ID = {}", currentId + 1);
-            if (isValid(user)) {
-                user.setId(++currentId);
-                users.put(user.getId(), user);
-            }
-        }catch (ValidationException exp){
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        }catch (NullPointerException exp){
-            log.error("Передан пустой аргумент");
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        }
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getGeneralFriends(@PathVariable Long id, @PathVariable Long otherId){
+        return userService.showGeneralsFriend(id, otherId);
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Long id){
+        return userStorage.getUserById(id);
+    }
+    @PostMapping
+    public User createUser(@RequestBody User user){
+        user = userStorage.addUser(user);
         return user;
     }
-    @PutMapping(value = "/users")
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable Long id, @PathVariable Long friendId){
+        userService.addFriends(id, friendId);
+    }
+    @PutMapping
     public Object updateUser(@RequestBody User user) {
-        try {
-            log.info("Получен PUT-запрос к эндпоинту: '/users' на обновление пользователя с ID={}", user.getId());
-            if (user.getId() == null) {
-                user.setId(currentId + 1);
-            }
-            if (isValid(user)) {
-                users.put(user.getId(), user);
-                currentId++;
-            }
-        } catch (ValidationException exp) {
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        } catch (NullPointerException exp) {
-            log.error("Передан пустой аргумент!");
-            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-        }
+        user = userStorage.updateUser(user);
         return user;
     }
-
-    private boolean isValid(User user){
-        if (user.getEmail().isEmpty() || !user.getEmail().contains("@")){
-            throw new ValidationException("Почта не должна быть пустой и должна содержать @");
-        }
-        if (user.getLogin().isEmpty() || user.getLogin().contains(" ")){
-            throw new ValidationException("Логин не должен содержать пробелы и не может быть пустым ");
-        }
-        if (user.getName().isEmpty()){
-            user.setName(user.getLogin());
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Некорректная дата рождения пользователя: " + user.getBirthday());
-        }
-        return true;
+    @DeleteMapping("/{id}/friends/{friendsId}")
+    public void deleteFriend(@PathVariable Long id, @PathVariable Long friendsId){
+        userService.deleteFriends(id, friendsId);
     }
+    @DeleteMapping("/{id}")
+    public User deleteUser(@PathVariable Long id){
+        return userStorage.deleteUserById(id);
+    }
+
 }
