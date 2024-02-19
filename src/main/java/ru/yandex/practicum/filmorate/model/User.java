@@ -20,7 +20,7 @@ public class User {
     Set<Long> friends;
     Map<Long,Boolean> friendStatus;
 
-    public User(Long id, String email, String login, String name, LocalDate birthday, Set<Long> friends, Map<Long,Boolean> friendStatus) {
+    public User(Long id, String email, String login, String name, LocalDate birthday, Set<Long> friends) {
         this.id = id;
         this.email = email;
         this.login = login;

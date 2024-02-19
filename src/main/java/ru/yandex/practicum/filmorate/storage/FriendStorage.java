@@ -20,15 +20,51 @@ public class FriendStorage {
     }
 
     public void addFriend(Long userId, Long friendId){
-
+        User user = userStorage.getUserById(userId);
+        User friend =  userStorage.getUserById(friendId);
+        if (user != null && friend != null) {
+            boolean status = false;
+            if (friend.getFriends().contains(userId)) {
+                status = true;
+                String sql = "UPDATE friends SET user_id = ? AND friend_id = ? AND status = ?" +
+                        "WHERE user_id = ? AND friend_id = ?";
+                jdbcTemplate.update(sql, friendId,userId,true, userId,friendId);
+            }
+            String sql = "INSERT INTO friends (user_id,friend_id, status) VALUES(?,?,?)";
+            jdbcTemplate.update(sql,userId,friendId,status);
+        }
     }
 
     public void  deleteFriend(Long userId, Long friendId) {
-
+        User user = userStorage.getUserById(userId);
+        User friend =  userStorage.getUserById(friendId);
+        if (user != null && friend != null) {
+            String sql = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
+            jdbcTemplate.update(sql,userId, friendId);
+            if (friend.getFriendStatus().containsKey(userId)) {
+                sql = "UPDATE friends SET user_id = ? AND friend_id = ? AND status = ?" +
+                        "WHERE user_id = ? AND friend_id = ?";
+                jdbcTemplate.update(sql,friendId, userId, false, friendId, userId);
+            }
+        }
     }
 
     public List<User> getFriends(Long userId) {
-
+        User user  = userStorage.getUserById(userId);
+        if (user != null) {
+            String sql  = "SELECT friend_id, email, login, name, birthday FROM friends" +
+                    "INNER JOIN users ON friends.friend_id = users.id WHERE friends.user_id = ?";
+            return jdbcTemplate.query(sql,(rs,rowNum) -> new User(
+                    rs.getLong("friend_id"),
+                    rs.getString("email"),
+                    rs.getString("login"),
+                    rs.getString("name"),
+                    rs.getDate("birthday").toLocalDate(),
+                    null),
+                    user);
+        } else {
+            return null;
+        }
     }
 
 }
