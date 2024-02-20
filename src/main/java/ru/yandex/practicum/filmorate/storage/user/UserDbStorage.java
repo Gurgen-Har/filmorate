@@ -22,7 +22,7 @@ public class UserDbStorage implements UserStorage {
     }
     @Override
     public List<User> getUsers() {
-        String sql = "SELECT FROM users ";
+        String sql = "SELECT * FROM users ";
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> new User(
                 rs.getLong("id"),

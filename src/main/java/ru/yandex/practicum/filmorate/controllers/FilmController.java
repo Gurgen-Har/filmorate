@@ -32,7 +32,7 @@ public class FilmController {
 
     @GetMapping("/popular")
     public List<Film> getTopFilms(){
-        return filmService.showTopFilms();
+        return filmService.getPopular();
 
     }
 
