@@ -51,7 +51,7 @@ public class GenreStorage {
     public void add(Film film) {
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
-                jdbcTemplate.update("INSERT INTO  film_genres(film_if, genre_id) VALUES (?, ?)",
+                jdbcTemplate.update("INSERT INTO  film_genres(film_id, genre_id) VALUES (?, ?)",
                         film.getId(), genre.getId());
             }
         }

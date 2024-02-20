@@ -12,7 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component
+
+@Component("inMemoryUserStorage")
 public class InMemoryUserStorage implements UserStorage {
     Map<Long, User> users;
     Long currentId;
@@ -26,7 +27,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User addUser(User user) {
+    public User create(User user) {
         if(isValidUser(user)){
             user.setId(++currentId);
             users.put(user.getId(), user);

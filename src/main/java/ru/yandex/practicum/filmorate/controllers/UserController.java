@@ -41,7 +41,7 @@ public class UserController {
     }
     @PostMapping
     public User createUser(@RequestBody User user){
-        user = userStorage.addUser(user);
+        user = userStorage.create(user);
         return user;
     }
     @PutMapping("/{id}/friends/{friendId}")
