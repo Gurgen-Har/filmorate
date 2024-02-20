@@ -40,7 +40,7 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@RequestBody Film film){
         log.info("Получен PUT запрос на создание");
-        filmStorage.addFilm(film);
+        filmStorage.create(film);
         return film;
     }
 
